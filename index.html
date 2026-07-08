@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>二次関数 最大値・最小値 思考補助ツール</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: #f7f2ea;
+      color: #2f2b27;
+    }
+    main {
+      position: relative;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 18px 24px 110px;
+    }
+    .badge {
+      display: inline-block;
+      margin: 0 0 10px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #e8ddce;
+      color: #5f4d39;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    h1 { margin: 0 0 10px; font-size: 30px; }
+    .lead { line-height: 1.8; color: #5a5148; }
+    .box {
+      margin-top: 18px;
+      padding: 18px 20px;
+      background: #fffdf9;
+      border: 1px solid #e2d7c7;
+      border-radius: 18px;
+      box-shadow: 0 6px 18px rgba(70, 50, 20, 0.06);
+    }
+    .formula {
+      font-size: 25px;
+      font-weight: 700;
+    }
+    .app {
+      margin-top: 18px;
+      padding: 16px;
+      background: #fffdf9;
+      border: 2px solid #d4c2aa;
+      border-radius: 22px;
+      box-shadow: 0 10px 24px rgba(70, 50, 20, 0.08);
+    }
+    #graphWrap {
+      width: 100%;
+      background: white;
+      border: 1px solid #e7dfd3;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #fffdf9;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+    svg:active {
+      cursor: grabbing;
+    }
+    .controls {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+      padding: 14px;
+      background: #f8f3eb;
+      border-radius: 16px;
+    }
+    .controls label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    input[type="range"] {
+      flex: 1;
+      min-width: 220px;
+    }
+    #aValue {
+      width: 56px;
+      font-weight: 700;
+      text-align: right;
+    }
+    button {
+      width: fit-content;
+      border: none;
+      border-radius: 999px;
+      padding: 9px 18px;
+      background: #6f8f72;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .shape-button {
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 27px;
+      color: #2f2b27;
+      border: 2px solid transparent;
+      border-radius: 999px;
+      box-shadow: 0 4px 10px rgba(120, 90, 50, 0.12);
+      line-height: 1;
+      cursor: pointer;
+    }
+    .shape-button.active {
+      transform: translateY(1px);
+      filter: brightness(0.96);
+    }
+    .circle-button {
+      background: #ffd6e8;
+      border-color: #f2a9cc;
+    }
+
+    .decor-rabbit-button {
+      border: none;
+      background: transparent;
+      font-size: 20px;
+      opacity: 0.45;
+      cursor: default;
+      padding: 2px 6px;
+      transition: opacity 0.2s ease;
+      user-select: none;
+    }
+    .decor-rabbit-button.active {
+      opacity: 0.9;
+    }
+    .carrot-button {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      width: 74px;
+      height: 74px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      opacity: 0.72;
+      cursor: default;
+      z-index: 20;
+      filter: drop-shadow(0 4px 8px rgba(80, 50, 20, 0.20));
+    }
+    .carrot-button.active {
+      opacity: 0.95;
+      transform: rotate(8deg);
+    }
+    .carrot-icon {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .hidden-problem {
+      display: none;
+    }
+    .problem-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .mini-rabbit {
+      width: 34px;
+      height: 34px;
+      font-size: 18px;
+      vertical-align: middle;
+      opacity: 0.7;
+    }
+    .slider-panel {
+      display: grid;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #fffdf9;
+      border: 1px solid #e6dacb;
+    }
+    .slider-panel.hidden {
+      display: none;
+    }
+    .a-input {
+      width: 96px;
+      padding: 7px 9px;
+      border: 1px solid #d3c7b8;
+      border-radius: 10px;
+      font-size: 16px;
+      background: white;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    article {
+      padding: 14px;
+      border-radius: 14px;
+      background: #f7f3ec;
+      border: 1px solid #e6dacb;
+    }
+    @media (max-width: 760px) {
+      .cards { grid-template-columns: 1fr; }
+      h1 { font-size: 25px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+<section id="problemBox" class="box">
+      <h2>問題</h2>
+      <p class="formula problem-line">aは定数とする。次の関数の<span id="targetWord">最小値</span>を求めよ。<button id="targetRabbitButton" class="shape-button circle-button mini-rabbit" type="button" title="最小値・最大値切り替え">🐰</button></p>
+      <p class="formula">y = x<sup>2</sup> - 2ax + a<sup>2</sup> + 1　（0≦x≦2）</p>
+    </section>
+
+    <section class="app">
+      <div id="graphWrap">
+        <svg id="graph" viewBox="0 0 1100 560" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="900" height="560" fill="#fffdf9"></rect>
+          <g id="gridLayer"></g>
+          <g id="domainLayer"></g>
+          <path id="parabola" d="" fill="none" stroke="#222222" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+          <g id="hintLayer"></g>
+        </svg>
+      </div>
+      <p style="margin:10px 4px 0; color:#6a5f55; font-size:14px;">グラフ部分を左右にドラッグすると、放物線が動きます。</p>
+
+      <div class="controls">
+        <div id="sliderPanel" class="slider-panel hidden">
+          <label>
+            頂点のx座標 a：
+            <input id="aSlider" type="range" min="-1.55" max="3.55" value="-1.55" step="0.01">
+            <span id="aValue">-1.55</span>
+          </label>
+
+          <label>
+            aの値を入力：
+            <input id="aInput" class="a-input" type="number" min="-1.55" max="3.55" value="-1.55" step="0.01">
+          </label>
+        </div>
+
+        <button id="rabbitButton" class="decor-rabbit-button" type="button" title="候補点・ヒント">🐰</button>
+        <button id="concavityButton" class="carrot-button" type="button" title="🥕">
+          <svg class="carrot-icon" viewBox="0 0 80 80" aria-hidden="true">
+            <path d="M52 10 C58 3, 66 5, 66 17 C75 14, 79 22, 70 30 C78 35, 73 45, 62 42" fill="#8ed28b" stroke="#5fa85e" stroke-width="3" stroke-linecap="round"/>
+            <path d="M17 65 C26 39, 39 20, 58 16 C62 34, 50 56, 25 72 C20 75, 15 70, 17 65 Z" fill="#ff9b45" stroke="#de7330" stroke-width="3"/>
+            <path d="M31 48 L43 43" stroke="#d46b2d" stroke-width="3" stroke-linecap="round"/>
+            <path d="M25 60 L35 55" stroke="#d46b2d" stroke-width="3" stroke-linecap="round"/>
+            <path d="M39 35 L50 30" stroke="#d46b2d" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button id="resetButton">リセット</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const sliderPanel = document.getElementById("sliderPanel");
+    const aSlider = document.getElementById("aSlider");
+    const aInput = document.getElementById("aInput");
+    const aValue = document.getElementById("aValue");
+    let showSliderPanel = false;
+    const rabbitButton = document.getElementById("rabbitButton");
+    const concavityButton = document.getElementById("concavityButton");
+    const problemBox = document.getElementById("problemBox");
+    const targetRabbitButton = document.getElementById("targetRabbitButton");
+    const targetWord = document.getElementById("targetWord");
+    let showHints = false;
+    let targetMode = "min";
+    let concavity = 1;
+    const resetButton = document.getElementById("resetButton");
+
+    const graph = document.getElementById("graph");
+    const gridLayer = document.getElementById("gridLayer");
+    const domainLayer = document.getElementById("domainLayer");
+    const hintLayer = document.getElementById("hintLayer");
+    const parabola = document.getElementById("parabola");
+
+    const stateText = document.getElementById("stateText");
+    const minText = document.getElementById("minText");
+    const maxText = document.getElementById("maxText");
+
+    const W = 1100;
+    const H = 560;
+
+    // x, y の表示範囲を固定する。
+    // ここを固定することで、放物線が「横方向だけに平行移動する」ことが見えやすくなる。
+    const xMin = -3.2;
+    const xMax = 5.2;
+    let yMin = 0;
+    let yMax = 42;
+
+    const domainLeft = 0;
+    const domainRight = 2;
+
+    function f(x, a) {
+      return concavity * 5 * (x - a) * (x - a) + 1;
+    }
+
+    function updateYRange() {
+      if (concavity === 1) {
+        yMin = 0;
+        yMax = 42;
+      } else {
+        yMin = -42;
+        yMax = 6;
+      }
+    }
+
+    function xToPx(x) {
+      return ((x - xMin) / (xMax - xMin)) * W;
+    }
+
+    function yToPx(y) {
+      return H - ((y - yMin) / (yMax - yMin)) * H;
+    }
+
+    function el(name, attrs = {}, text = "") {
+      const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+      for (const [key, value] of Object.entries(attrs)) {
+        node.setAttribute(key, value);
+      }
+      if (text) node.textContent = text;
+      return node;
+    }
+
+    function drawGrid() {
+      gridLayer.innerHTML = "";
+
+      // x軸
+      gridLayer.appendChild(el("line", {
+        x1: 0, y1: yToPx(0), x2: W, y2: yToPx(0),
+        stroke: "#d8d0c5", "stroke-width": 2
+      }));
+
+      // y軸
+      if (concavity === 1) {
+        gridLayer.appendChild(el("line", {
+          x1: xToPx(0), y1: 0, x2: xToPx(0), y2: H,
+          stroke: "#d8d0c5", "stroke-width": 2
+        }));
+      }
+
+      if (concavity === 1) {
+        for (let x = 0; x <= 2; x++) {
+          gridLayer.appendChild(el("line", {
+            x1: xToPx(x), y1: yToPx(0) - 6,
+            x2: xToPx(x), y2: yToPx(0) + 6,
+            stroke: "#8d8378", "stroke-width": 2
+          }));
+          gridLayer.appendChild(el("text", {
+            x: xToPx(x) - 5, y: yToPx(0) + 26,
+            fill: "#81776c", "font-size": 16
+          }, String(x)));
+        }
+      }
+
+      if (concavity === 1) {
+        gridLayer.appendChild(el("line", {
+          x1: 0, y1: yToPx(1), x2: W, y2: yToPx(1),
+          stroke: "#c9b99f",
+          "stroke-width": 2,
+          "stroke-dasharray": "6 8"
+        }));
+        gridLayer.appendChild(el("text", {
+          x: 12, y: yToPx(1) - 8,
+          fill: "#9a8262",
+          "font-size": 16,
+          "font-weight": 700
+        }, "y=1"));
+      }
+    }
+
+    function drawDomain() {
+      domainLayer.innerHTML = "";
+      const left = Math.round(xToPx(domainLeft));
+      const right = Math.round(xToPx(domainRight));
+      const width = right - left;
+
+      domainLayer.appendChild(el("rect", {
+        x: left, y: 0, width: width, height: H,
+        fill: "#d9ecfa",
+        stroke: "none"
+      }));
+
+      if (concavity === 1) {
+        domainLayer.appendChild(el("line", {
+          x1: left, y1: 0, x2: left, y2: H,
+          stroke: "#2d70a5", "stroke-width": 3
+        }));
+        domainLayer.appendChild(el("line", {
+          x1: right, y1: 0, x2: right, y2: H,
+          stroke: "#2d70a5", "stroke-width": 3
+        }));
+      }
+
+      if (concavity === 1) {
+        domainLayer.appendChild(el("text", {
+          x: left - 18, y: H - 18,
+          fill: "#245f8c",
+          "font-size": 20,
+          "font-weight": 700
+        }, "x=0"));
+
+        domainLayer.appendChild(el("text", {
+          x: right - 18, y: H - 18,
+          fill: "#245f8c",
+          "font-size": 20,
+          "font-weight": 700
+        }, "x=2"));
+
+        domainLayer.appendChild(el("text", {
+          x: left + 14, y: 34,
+          fill: "#245f8c",
+          "font-size": 22,
+          "font-weight": 700
+        }, "定義域 0≦x≦2"));
+      }
+    }
+
+    function drawParabola(a) {
+      let d = "";
+      for (let i = 0; i <= 320; i++) {
+        const x = xMin + (xMax - xMin) * i / 320;
+        const y = f(x, a);
+        const px = xToPx(x);
+        const py = yToPx(y);
+        d += (i === 0 ? "M " : " L ") + px.toFixed(2) + " " + py.toFixed(2);
+      }
+      parabola.setAttribute("d", d);
+    }
+
+    function labelText(cx, cy, color, label, dx = 10, dy = -10) {
+      let labelX = cx + dx;
+      let labelY = cy + dy;
+      labelX = Math.max(8, Math.min(W - 130, labelX));
+      labelY = Math.max(24, Math.min(H - 14, labelY));
+
+      hintLayer.appendChild(el("text", {
+        x: labelX, y: labelY,
+        fill: color,
+        "font-size": 18,
+        "font-weight": 700
+      }, label));
+    }
+
+    function point(x, y, color, label, dx = 10, dy = -10) {
+      const cx = xToPx(x);
+      const cy = yToPx(y);
+
+      const visibleCx = Math.max(12, Math.min(W - 12, cx));
+      const visibleCy = Math.max(12, Math.min(H - 12, cy));
+
+      hintLayer.appendChild(el("circle", {
+        cx: visibleCx, cy: visibleCy, r: 9,
+        fill: color,
+        stroke: "#ffffff",
+        "stroke-width": 3
+      }));
+
+      labelText(visibleCx, visibleCy, color, label, dx, dy);
+    }
+
+    function trianglePoint(x, y, color, label, dx = 10, dy = -10) {
+      const cx = xToPx(x);
+      const cy = yToPx(y);
+
+      const visibleCx = Math.max(14, Math.min(W - 14, cx));
+      const visibleCy = Math.max(14, Math.min(H - 14, cy));
+
+      const size = 12;
+      const pointsText = [
+        `${visibleCx},${visibleCy - size}`,
+        `${visibleCx - size},${visibleCy + size}`,
+        `${visibleCx + size},${visibleCy + size}`
+      ].join(" ");
+
+      hintLayer.appendChild(el("polygon", {
+        points: pointsText,
+        fill: color,
+        stroke: "#ffffff",
+        "stroke-width": 3
+      }));
+
+      labelText(visibleCx, visibleCy, color, label, dx, dy);
+    }
+
+    function getMinInfo(a) {
+      const y0 = f(0, a);
+      const y2 = f(2, a);
+
+      // 下に凸：最小値は軸に近いところ
+      if (concavity === 1) {
+        if (a < 0) return { x: 0, reason: "軸が定義域の左にあるので、軸に近い左端 x=0 で最小。" };
+        if (a > 2) return { x: 2, reason: "軸が定義域の右にあるので、軸に近い右端 x=2 で最小。" };
+        return { x: a, reason: "軸 x=a が定義域に入っているので、頂点で最小。" };
+      }
+
+      // 上に凸：最小値は端点のうち低い方
+      if (Math.abs(y0 - y2) < 0.001) return { x: "0と2", reason: "両端が同じ高さなので、x=0 と x=2 で最小。" };
+      if (y0 < y2) return { x: 0, reason: "左端 x=0 の方が低いので、x=0 で最小。" };
+      return { x: 2, reason: "右端 x=2 の方が低いので、x=2 で最小。" };
+    }
+
+    function getMaxInfo(a) {
+      const y0 = f(0, a);
+      const y2 = f(2, a);
+
+      // 下に凸：最大値は端点のうち軸から遠い方
+      if (concavity === 1) {
+        if (Math.abs(y0 - y2) < 0.001) return { x: "0と2", reason: "両端が軸から同じ距離なので、x=0 と x=2 で最大。" };
+        if (y0 > y2) return { x: 0, reason: "左端 x=0 の方が軸から遠いので、x=0 で最大。" };
+        return { x: 2, reason: "右端 x=2 の方が軸から遠いので、x=2 で最大。" };
+      }
+
+      // 上に凸：最大値は軸に近いところ
+      if (a < 0) return { x: 0, reason: "軸が定義域の左にあるので、軸に近い左端 x=0 で最大。" };
+      if (a > 2) return { x: 2, reason: "軸が定義域の右にあるので、軸に近い右端 x=2 で最大。" };
+      return { x: a, reason: "軸 x=a が定義域に入っているので、頂点で最大。" };
+    }
+
+    function drawHints(a) {
+      hintLayer.innerHTML = "";
+
+      const axisX = xToPx(a);
+      hintLayer.appendChild(el("line", {
+        x1: axisX, y1: 0, x2: axisX, y2: H,
+        stroke: "#d85b5b",
+        "stroke-width": 3,
+        "stroke-dasharray": "10 8"
+      }));
+
+      hintLayer.appendChild(el("text", {
+        x: Math.min(Math.max(axisX + 8, 10), W - 100),
+        y: 62,
+        fill: "#d85b5b",
+        "font-size": 21,
+        "font-weight": 700
+      }, "軸 x=a"));
+
+      if (!showHints) return;
+
+      const minInfo = getMinInfo(a);
+      const maxInfo = getMaxInfo(a);
+
+      // 色だけに頼らないように、最小値は青い丸、最大値は赤い三角で表示する。
+      if (typeof minInfo.x === "number") {
+        point(minInfo.x, f(minInfo.x, a), "#1f77b4", "最小値", 10, 24);
+      }
+
+      if (typeof maxInfo.x === "number") {
+        trianglePoint(maxInfo.x, f(maxInfo.x, a), "#d62728", "最大値", 10, -28);
+      } else {
+        trianglePoint(0, f(0, a), "#d62728", "最大値", 10, -28);
+        trianglePoint(2, f(2, a), "#d62728", "最大値", 10, -28);
+      }
+    }
+
+    function updateText(a) {
+      if (!stateText || !minText || !maxText) return;
+
+      let state;
+      if (a < 0) state = "軸 x=a は定義域の左側にあります。";
+      else if (a > 2) state = "軸 x=a は定義域の右側にあります。";
+      else state = "軸 x=a は定義域の中にあります。";
+
+      stateText.textContent = "今の状態：a=" + a.toFixed(2) + "。" + state;
+      minText.textContent = "最小値の考え方：" + getMinInfo(a).reason;
+      maxText.textContent = "最大値の考え方：" + getMaxInfo(a).reason;
+    }
+
+    function draw() {
+      updateYRange();
+      if (problemBox) {
+        problemBox.classList.toggle("hidden-problem", concavity === -1);
+      }
+      const graphSvg = document.getElementById("graph");
+      if (graphSvg) {
+        graphSvg.classList.toggle("concave-down-mode", concavity === -1);
+      }
+
+      const a = Number(aSlider.value);
+      aValue.textContent = a.toFixed(2);
+      if (document.activeElement !== aInput) {
+        aInput.value = a.toFixed(2);
+      }
+
+      drawGrid();
+      drawDomain();
+      drawParabola(a);
+      drawHints(a);
+      updateText(a);
+    }
+
+
+    let isDragging = false;
+    let lastClientX = 0;
+
+    function clientXToMathDelta(dxClient) {
+      const rect = graph.getBoundingClientRect();
+      return dxClient / rect.width * (xMax - xMin);
+    }
+
+    function setAValue(nextA) {
+      const minA = Number(aSlider.min);
+      const maxA = Number(aSlider.max);
+      const clamped = Math.max(minA, Math.min(maxA, nextA));
+      aSlider.value = clamped.toFixed(2);
+      aInput.value = clamped.toFixed(2);
+      draw();
+    }
+
+    function startDrag(event) {
+      isDragging = true;
+      lastClientX = event.clientX;
+      graph.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    }
+
+    function moveDrag(event) {
+      if (!isDragging) return;
+      const dxClient = event.clientX - lastClientX;
+      lastClientX = event.clientX;
+
+      // 指やマウスを右に動かしたら、放物線も右へ動く。
+      const da = clientXToMathDelta(dxClient);
+      setAValue(Number(aSlider.value) + da);
+      event.preventDefault();
+    }
+
+    function endDrag(event) {
+      isDragging = false;
+      try {
+        graph.releasePointerCapture(event.pointerId);
+      } catch (e) {}
+    }
+
+
+    aSlider.addEventListener("input", () => {
+      aInput.value = Number(aSlider.value).toFixed(2);
+      draw();
+    });
+
+    aInput.addEventListener("change", () => {
+      const value = Number(aInput.value);
+      if (Number.isFinite(value)) {
+        setAValue(value);
+      }
+    });
+
+    aInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        aInput.blur();
+      }
+    });
+
+    // 飾りっぽい🐰をダブルクリックすると、隠し機能が出る
+    rabbitButton.addEventListener("dblclick", () => {
+      const nextState = !showSliderPanel;
+
+      showSliderPanel = nextState;
+      showHints = nextState;
+
+      sliderPanel.classList.toggle("hidden", !showSliderPanel);
+      rabbitButton.classList.toggle("active", showSliderPanel);
+
+      draw();
+    });
+    graph.addEventListener("pointerdown", startDrag);
+    graph.addEventListener("pointermove", moveDrag);
+    graph.addEventListener("pointerup", endDrag);
+    graph.addEventListener("pointercancel", endDrag);
+    graph.addEventListener("pointerleave", endDrag);
+targetRabbitButton.addEventListener("click", () => {
+      targetMode = targetMode === "min" ? "max" : "min";
+      targetWord.textContent = targetMode === "min" ? "最小値" : "最大値";
+      targetRabbitButton.classList.toggle("active", targetMode === "max");
+      draw();
+    });
+
+    concavityButton.addEventListener("click", () => {
+      concavity = concavity === 1 ? -1 : 1;
+      concavityButton.classList.toggle("active", concavity === -1);
+
+      if (concavity === -1 && !showSliderPanel) {
+        showHints = false;
+      }
+
+      sliderPanel.classList.toggle("hidden", !showSliderPanel);
+
+      draw();
+    });
+
+    resetButton.addEventListener("click", () => {
+      aSlider.value = -1.55;
+      aInput.value = "-1.55";
+      showHints = false;
+      showSliderPanel = false;
+      targetMode = "min";
+      concavity = 1;
+      targetWord.textContent = "最小値";
+      rabbitButton.classList.remove("active");
+            sliderPanel.classList.add("hidden");
+      targetRabbitButton.classList.remove("active");
+      draw();
+    });
+
+    draw();
+  </script>
+</body>
+</html>
